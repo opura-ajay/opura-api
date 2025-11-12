@@ -16,7 +16,9 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Swagger documentation routes
+app.use("/api-docs", swaggerUi.serve);
+app.get("/api-docs", swaggerUi.setup(swaggerSpec));
 app.get("/api-docs-json", (req, res) => res.json(swaggerSpec));
 //User Route
 app.use("/api/users", userRoutes);
