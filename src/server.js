@@ -4,7 +4,7 @@ import cors from "cors";
 import userRoutes from "./routes/userRoutes.js";
 import adminConfigRoutes from "./routes/adminConfigRoutes.js";
 import { connectDB } from "./db.js";
-import "./models/Tenant.js"; // must come before User
+import "./models/tenant.js"; // must come before User
 import "./models/User.js";
 import "./models/AdminConfig.js";
 import { swaggerUi, swaggerSpec } from "./config/swaggerConfig.js";
