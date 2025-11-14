@@ -1,14 +1,18 @@
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import User from "../models/User.js";
-import { rolePermissions } from "../config/rolePermissions.js";
+import { sendVerificationEmail } from "../../../utils/welcome-email-template.js";
+import jwt from "jsonwebtoken";
 
 // 🧾 Validation schema
 const createUserSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
   lastName: z.string().optional(),
   email: z.string().email("Invalid email format"),
-  password: z.string().min(6, "Password must be at least 6 characters long"),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters long")
+    .optional(),
   role: z.enum(["super_admin", "merchant_admin", "finance"]),
   tenant_id: z.string().optional(),
   is_super_admin: z.boolean().optional(),
@@ -31,7 +35,6 @@ export const createUser = async (req, res) => {
       firstName,
       lastName,
       email,
-      password,
       role,
       tenant_id,
       is_super_admin,
@@ -47,34 +50,54 @@ export const createUser = async (req, res) => {
       });
     }
 
-    // ✅ 3. Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // ✅ 3. Generate default random password
+    const defaultPassword = Math.random().toString(36).slice(-10);
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
-    // ✅ 4. Prepare user object
+    // ✅ 4. Generate 7-day verification token
+    const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    // ✅ 5. Prepare user object
     const newUser = new User({
       firstName,
       lastName,
       email,
-      password: hashedPassword,
+      password: null,
       role,
       tenant_id: tenant_id || null,
       is_super_admin: is_super_admin || role === "super_admin",
       is_system_user: is_system_user || false,
+      defaultPassword: defaultPassword,
+      // 🧩 New onboarding fields
+      isVerified: false,
+      isDefaultPassword: true,
+      verificationToken,
+      verificationTokenExpiry: Date.now() + 7 * 24 * 60 * 60 * 1000,
     });
 
-    // 🧠 Auto-assign permissions handled in schema pre-save hook
-    // but you can also force-set here explicitly if desired:
-    // newUser.permissions = rolePermissions[role];
-
-    // ✅ 5. Save user
+    // ✅ 6. Save user to DB
     const savedUser = await newUser.save();
 
-    // ✅ 6. Send response (hide password)
-    const { password: _, ...userData } = savedUser.toObject();
+    // ✅ 7. Send welcome + verification email
+    await sendVerificationEmail(
+      email,
+      firstName,
+      verificationToken,
+      defaultPassword
+    );
+
+    // ✅ 8. Hide sensitive fields from response
+    const {
+      password: _,
+      verificationToken: __,
+      ...userData
+    } = savedUser.toObject();
 
     res.status(201).json({
       success: true,
-      message: "User created successfully",
+      message: "User created successfully. A verification email has been sent.",
       user: userData,
     });
   } catch (err) {

@@ -1,12 +1,15 @@
 // middleware/checkPermission.js
 
-import rolePermissions from "../config/rolePermissions";
+// import { rolePermissions } from "../config/rolePermissions";
+import { rolePermissions } from "../config/rolePermissions.js";
 
 export const checkPermission = (module, action) => {
   return (req, res, next) => {
     const user = req.user;
     if (!user?.role) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: User role missing" });
     }
 
     const perms = rolePermissions[user.role];
@@ -15,10 +18,12 @@ export const checkPermission = (module, action) => {
     }
 
     const allowed = perms[module]?.includes(action);
-    if (allowed) return next();
+    if (!allowed) {
+      return res.status(403).json({
+        message: `Access denied: '${user.role}' cannot perform '${action}' on '${module}'`,
+      });
+    }
 
-    return res.status(403).json({
-      message: `Access denied: ${action.toUpperCase()} on ${module}`,
-    });
+    next();
   };
 };

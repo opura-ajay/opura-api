@@ -59,71 +59,6 @@
  *         temperature: 0.7
  */
 
-// /**
-//  * @swagger
-//  * /api/bot-config:
-//  *   post:
-//  *     summary: Create a new admin configuration
-//  *     tags: [AdminConfig]
-//  *     description: Create a new configuration for a merchant (super_admin only)
-//  *     requestBody:
-//  *       required: true
-//  *       content:
-//  *         application/json:
-//  *           schema:
-//  *             $ref: '#/components/schemas/AdminConfig'
-//  *     responses:
-//  *       201:
-//  *         description: Configuration created successfully
-//  *         content:
-//  *           application/json:
-//  *             schema:
-//  *               type: object
-//  *               properties:
-//  *                 success:
-//  *                   type: boolean
-//  *                 message:
-//  *                   type: string
-//  *                 data:
-//  *                   $ref: '#/components/schemas/AdminConfig'
-//  *       409:
-//  *         description: Configuration already exists
-//  *       500:
-//  *         description: Server error
-//  */
-
-// /**
-//  * @swagger
-//  * /api/bot-config:
-//  *   get:
-//  *     summary: Get all admin configurations (paginated)
-//  *     tags: [AdminConfig]
-//  *     description: Retrieve all configurations with pagination (super_admin only)
-//  *     parameters:
-//  *       - in: query
-//  *         name: page
-//  *         schema:
-//  *           type: integer
-//  *           default: 1
-//  *         description: Page number
-//  *       - in: query
-//  *         name: limit
-//  *         schema:
-//  *           type: integer
-//  *           default: 10
-//  *         description: Items per page
-//  *       - in: query
-//  *         name: search
-//  *         schema:
-//  *           type: string
-//  *         description: Search by merchant_id
-//  *     responses:
-//  *       200:
-//  *         description: Configurations retrieved successfully
-//  *       500:
-//  *         description: Server error
-//  */
-
 /**
  * @swagger
  * /api/bot-config/{merchant_id}:
@@ -171,52 +106,6 @@
  *         description: Configuration not found
  *       500:
  *         description: Server error
- */
-
-// /**
-//  * @swagger
-//  * /api/bot-config/{merchant_id}:
-//  *   put:
-//  *     summary: Update admin configuration by merchant_id
-//  *     tags: [AdminConfig]
-//  *     description: Update existing configuration (full or partial update)
-//  *     parameters:
-//  *       - in: path
-//  *         name: merchant_id
-//  *         required: true
-//  *         schema:
-//  *           type: string
-//  *         description: Merchant ID
-//  *         example: merchant_12345
-//  *     requestBody:
-//  *       required: true
-//  *       content:
-//  *         application/json:
-//  *           schema:
-//  *             $ref: '#/components/schemas/AdminConfig'
-//  *     responses:
-//  *       200:
-//  *         description: Configuration updated successfully
-//  *         content:
-//  *           application/json:
-//  *             schema:
-//  *               type: object
-//  *               properties:
-//  *                 success:
-//  *                   type: boolean
-//  *                 message:
-//  *                   type: string
-//  *                 data:
-//  *                   $ref: '#/components/schemas/AdminConfig'
-//  *       404:
-//  *         description: Configuration not found
-//  *       500:
-//  *         description: Server error
-//  */
-
-/**
- * @swagger
- * /api/bot-config/{merchant_id}:
  *   delete:
  *     summary: Delete admin configuration by merchant_id
  *     tags: [AdminConfig]
@@ -314,11 +203,6 @@
  *         description: Configuration not found
  *       500:
  *         description: Server error
- */
-
-/**
- * @swagger
- * /api/bot-config/minimal/{merchant_id}:
  *   patch:
  *     summary: Update minimal configuration (flat structure)
  *     tags: [AdminConfig]
@@ -438,45 +322,53 @@
 
 import express from "express";
 import {
-  // getAllConfigs,
-  // createConfig,
+//   getAllConfigs,
+//   createConfig,
   getFullConfig,
-  // updateFullConfig,
+//   updateFullConfig,
   deleteConfig,
-  // createMinimalConfig,
+//   createMinimalConfig,
   getMinimalConfig,
   updateMinimalConfig,
-  resetAllMinimalFields
-} from "../controllers/adminConfigController.js";
-import { authenticateToken, optionalAuth } from "../middleware/authMiddleware.js";
+//   resetMinimalFields,
+  resetAllMinimalFields,
+} from "../controllers/configController.js";
+import {
+  authenticateToken,
+  optionalAuth,
+} from "../../../middleware/authMiddleware.js";
+import { validateBotConfigUpdate } from "../../../middleware/validateBotConfig.js";
 
 const router = express.Router();
 
 // GET /api/bot-config - Get all configurations (paginated)
-// router.get("/", getAllConfigs);
+// router.get("/", optionalAuth, getAllConfigs);
 
 // POST /api/bot-config - Create new configuration
-// router.post("/", createConfig);
+// router.post("/", authenticateToken, createConfig);
 
 // GET /api/bot-config/:merchant_id - Get full configuration (optional auth)
 router.get("/:merchant_id", optionalAuth, getFullConfig);
 
 // PUT /api/bot-config/:merchant_id - Update configuration
-// router.put("/:merchant_id", updateFullConfig);
+// router.put("/:merchant_id", authenticateToken, updateFullConfig);
 
 // DELETE /api/bot-config/:merchant_id - Delete configuration (requires auth)
 router.delete("/:merchant_id", authenticateToken, deleteConfig);
 
 // POST /api/bot-config/minimal - Create config from minimal structure (not recommended)
-// router.post("/minimal", createMinimalConfig);
+// router.post("/minimal", authenticateToken, createMinimalConfig);
 
-// GET /api/bot-config/minimal/:merchant_id - Get minimal config for chatbot (optional auth)
+// GET /api/bot-config/minimal/:merchant_id - Get minimal config (optional auth)
 router.get("/minimal/:merchant_id", optionalAuth, getMinimalConfig);
 
 // PATCH /api/bot-config/minimal/:merchant_id - Update minimal config (requires auth)
-router.patch("/minimal/:merchant_id", authenticateToken, updateMinimalConfig);
+router.patch("/minimal/:merchant_id", authenticateToken, validateBotConfigUpdate, updateMinimalConfig);
 
-// POST /api/bot-config/minimal/:merchant_id/reset - Reset fields to factory values (requires auth)
+// POST /api/bot-config/minimal/:merchant_id/reset_selected - Reset selected fields to factory values (requires auth)
+// router.post("/minimal/:merchant_id/reset_selected", authenticateToken, resetMinimalFields);
+
+// POST /api/bot-config/minimal/:merchant_id/reset - Reset all fields (requires auth)
 router.post("/minimal/:merchant_id/reset", authenticateToken, resetAllMinimalFields);
 
 export default router;

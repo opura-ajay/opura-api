@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
-import connectDB from "../db.js";
-import AdminConfig from "../models/AdminConfig.js";
+import connectDB from "../../../db.js";
+import AdminConfig from "../models/Config.js";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -8,7 +8,7 @@ import { dirname, join } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const adminConfigData = JSON.parse(
-  readFileSync(join(__dirname, "../config/admin-config.json"), "utf-8")
+  readFileSync(join(__dirname, "./config.json"), "utf-8")
 );
 
 dotenv.config();

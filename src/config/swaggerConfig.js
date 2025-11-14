@@ -1,11 +1,6 @@
 // src/config/swagger.js
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const options = {
   definition: {
@@ -17,12 +12,14 @@ const options = {
     },
     servers: [
       {
-        url: process.env.API_URL || "http://localhost:2000",
-        description: "API Server",
+        url: "http://localhost:1000", // change port if needed
       },
     ],
   },
-  apis: [join(__dirname, "../routes/*.js")], // Path to your route files
+  apis: [
+    "./src/routes/*.js",
+    "./src/modules/**/*.js",
+  ], // Path to your route files
 };
 
 const swaggerSpec = swaggerJsdoc(options);
